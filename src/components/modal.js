@@ -1,32 +1,46 @@
-import {getProfileValue} from './form.js';
-export {openPopup, closePopup, openCardImage};
+export {openPopup, closePopup, openCardImage };
 
 const popupTypeImage = document.querySelector('.popup_type_image');
 const popupImage = document.querySelector('.popup__image');
-const popup = document.querySelectorAll('.popup');
 
-function openPopup (popupType){
-  return function getPopup (event) {
-    if (event.target.closest('.profile__edit-button')) {
-      getProfileValue();
-    }
-    popupType.classList.add('popup_is-opened', 'popup_is-animated');
-    window.addEventListener('keydown', closePopup);
-  }
-}
-
-function closePopup (event) {
-  const target = event.target;
-  if (target === event.currentTarget || target.closest('.popup__button') || target.closest('.popup__close') || event.code === 'Escape') {
-    popup.forEach((item) => {
-      item.classList.remove('popup_is-opened');
-    }) 
-  }
-}
+function openPopup (popup){
+  popup.classList.add('popup_is-opened', 'popup_is-animated'); 
+  document.addEventListener('keydown', closeByEsc);
+  popup.addEventListener('click', closeByOverlay);
+  popup.addEventListener('click', closeByButton);
+} 
 
 function openCardImage(event) {
   const cardImage = event.target.closest('.card__image');
-  popupTypeImage.classList.add('popup_is-opened', 'popup_is-animated');
-  window.addEventListener('keydown', closePopup);
+  openPopup (popupTypeImage);
   popupImage.src = cardImage.src;
+  popupImage.alt = cardImage.alt;
+}
+
+function closePopup(popup) {
+  popup.classList.remove('popup_is-opened', 'popup_is-animated');
+  document.removeEventListener('keydown', closeByEsc);
+  popup.removeEventListener('click', closeByOverlay);
+  popup.removeEventListener('click', closeByButton);
+}
+
+function closeByEsc (event) {
+  if (event.key === 'Escape') {
+    const popup = document.querySelector('.popup_is-opened');
+    closePopup(popup);
+  }
+}
+
+function closeByOverlay (event) {
+  if (event.target === event.currentTarget) {
+    const popup = document.querySelector('.popup_is-opened');
+    closePopup(popup);
+  }
+}
+
+function closeByButton (event) {
+  if (event.target.closest('.popup__close')) {
+    const popup = document.querySelector('.popup_is-opened');
+    closePopup(popup);
+  }
 }
