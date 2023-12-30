@@ -1,7 +1,4 @@
-export {openPopup, closePopup, openCardImage };
-
-const popupTypeImage = document.querySelector('.popup_type_image');
-const popupImage = document.querySelector('.popup__image');
+export {openPopup, closePopup };
 
 function openPopup (popup){
   popup.classList.add('popup_is-opened', 'popup_is-animated'); 
@@ -9,13 +6,6 @@ function openPopup (popup){
   popup.addEventListener('click', closeByOverlay);
   popup.addEventListener('click', closeByButton);
 } 
-
-function openCardImage(event) {
-  const cardImage = event.target.closest('.card__image');
-  openPopup (popupTypeImage);
-  popupImage.src = cardImage.src;
-  popupImage.alt = cardImage.alt;
-}
 
 function closePopup(popup) {
   popup.classList.remove('popup_is-opened', 'popup_is-animated');
