@@ -20,3 +20,13 @@
     line-height: 15px;
   }
 }
+
+.popup__input_type_error {
+  min-height: 12px;
+  font-family: 'Inter', 'Arial', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 14.5px;
+  color: #FF0000;
+}
