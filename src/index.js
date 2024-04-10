@@ -158,23 +158,16 @@ function handleEditAvatarFormSubmit(event) {
 function handleAddCardFormSubmit(event) {
 	event.preventDefault()
 	buttonSaveAddCard.textContent = 'Сохранение...'
-	const CardData = {
+	const cardData = {
 		name: placeNameInput.value,
 		link: linkInput.value,
 	}
-	sendNewCardData(CardData)
+	sendNewCardData(cardData)
 		.then(newCard => {
 			closePopup(popupAdd)
 			const userId = newCard.owner._id
-			const newCardData = {
-				_id: newCard._id,
-				name: newCard.name,
-				link: newCard.link,
-				likes: newCard.likes,
-				owner: newCard.owner,
-			}
 			const cardData = createCard(
-				newCardData,
+				newCard,
 				handleDeleteClick,
 				handleLikeClick,
 				openCardImage,

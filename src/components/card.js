@@ -23,7 +23,6 @@ function createCard(
 	cardImage.alt = cardData.name
 	cardImage.src = cardData.link
 	cardLikeCounter.textContent = cardData.likes.length
-	cardElement.setAttribute('data-card-id', cardData._id)
 
 	if (cardData.owner._id === userId) {
 		deleteButton.addEventListener('click', () =>
