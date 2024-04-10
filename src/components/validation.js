@@ -10,40 +10,43 @@ const validationConfig = {
 }
 
 function showInputError(
-	formSelector,
-	inputSelector,
+	formElement,
+	inputElement,
 	errorMessage,
-	validationConfig
+	{ inputErrorClass, errorClass }
 ) {
-	const errorElement = formSelector.querySelector(`.${inputSelector.id}-error`)
-	inputSelector.classList.add(validationConfig.inputErrorClass)
+	const errorElement = formElement.querySelector(`.${inputElement.id}-error`)
+	inputElement.classList.add(inputErrorClass)
 	errorElement.textContent = errorMessage
-	errorElement.classList.add(validationConfig.errorClass)
+	errorElement.classList.add(errorClass)
 }
 
-function hideInputError(formSelector, inputSelector, validationConfig) {
-	const errorElement = formSelector.querySelector(`.${inputSelector.id}-error`)
-	inputSelector.classList.remove(validationConfig.inputErrorClass)
+function hideInputError(
+	formElement,
+	inputElement,
+	{ inputErrorClass, errorClass }
+) {
+	const errorElement = formElement.querySelector(`.${inputElement.id}-error`)
+	inputElement.classList.remove(inputErrorClass)
 	errorElement.textContent = ''
-	errorElement.classList.remove(validationConfig.errorClass)
+	errorElement.classList.remove(errorClass)
 }
 
-function isValid(formSelector, inputSelector) {
-	if (inputSelector.validity.patternMismatch) {
-		inputSelector.setCustomValidity(inputSelector.dataset.errorMessage)
+function isValid(formElement, inputElement, validationConfig) {
+	if (inputElement.validity.patternMismatch) {
+		inputElement.setCustomValidity(inputElement.dataset.errorMessage)
 	} else {
-		inputSelector.setCustomValidity('')
+		inputElement.setCustomValidity('')
 	}
-
-	if (!inputSelector.validity.valid) {
+	if (!inputElement.validity.valid) {
 		showInputError(
-			formSelector,
-			inputSelector,
-			inputSelector.validationMessage,
+			formElement,
+			inputElement,
+			inputElement.validationMessage,
 			validationConfig
 		)
 	} else {
-		hideInputError(formSelector, inputSelector, validationConfig)
+		hideInputError(formElement, inputElement, validationConfig)
 	}
 }
 
@@ -61,16 +64,16 @@ function toggleButtonState(inputList, buttonElement, { inactiveButtonClass }) {
 	}
 }
 
-function setEventListeners(formSelector, validationConfig) {
+function setEventListeners(formElement, validationConfig) {
 	const inputList = Array.from(
-		formSelector.querySelectorAll(validationConfig.inputSelector)
+		formElement.querySelectorAll(validationConfig.inputSelector)
 	)
-	const buttonElement = formSelector.querySelector(
+	const buttonElement = formElement.querySelector(
 		validationConfig.submitButtonSelector
 	)
-	inputList.forEach(inputSelector => {
-		inputSelector.addEventListener('input', function () {
-			isValid(formSelector, inputSelector, validationConfig)
+	inputList.forEach(inputElement => {
+		inputElement.addEventListener('input', function () {
+			isValid(formElement, inputElement, validationConfig)
 			toggleButtonState(inputList, buttonElement, validationConfig)
 		})
 	})

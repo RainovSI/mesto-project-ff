@@ -1,17 +1,13 @@
-export { openPopup, closePopup }
+export { openPopup, closePopup, setCloseModalOnClickListeners }
 
 function openPopup(popup) {
 	popup.classList.add('popup_is-opened', 'popup_is-animated')
 	document.addEventListener('keydown', closeByEsc)
-	popup.addEventListener('click', closeByOverlay)
-	popup.addEventListener('click', closeByButton)
 }
 
 function closePopup(popup) {
 	popup.classList.remove('popup_is-opened', 'popup_is-animated')
 	document.removeEventListener('keydown', closeByEsc)
-	popup.removeEventListener('click', closeByOverlay)
-	popup.removeEventListener('click', closeByButton)
 }
 
 function closeByEsc(event) {
@@ -21,16 +17,12 @@ function closeByEsc(event) {
 	}
 }
 
-function closeByOverlay(event) {
-	if (event.target === event.currentTarget) {
-		const popup = document.querySelector('.popup_is-opened')
-		closePopup(popup)
-	}
-}
-
-function closeByButton(event) {
-	if (event.target.closest('.popup__close')) {
-		const popup = document.querySelector('.popup_is-opened')
-		closePopup(popup)
-	}
+function setCloseModalOnClickListeners(popupList) {
+	popupList.forEach(popup => {
+		const closeButton = popup.querySelector('.popup__close')
+		closeButton.addEventListener('click', () => closePopup(popup))
+		popup.addEventListener('click', event => {
+			if (event.target === event.currentTarget) closePopup(popup)
+		})
+	})
 }

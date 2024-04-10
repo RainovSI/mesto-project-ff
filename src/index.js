@@ -1,13 +1,20 @@
 import './pages/index.css'
-import { createCard, deleteCard, likeCard } from './components/card.js'
-import { openPopup, closePopup } from './components/modal.js'
+import {
+	createCard,
+	handleDeleteClick,
+	handleLikeClick,
+} from './components/card.js'
+import {
+	openPopup,
+	closePopup,
+	setCloseModalOnClickListeners,
+} from './components/modal.js'
 import {
 	enableValidation,
 	clearValidation,
 	validationConfig,
 } from './components/validation.js'
 import {
-	config,
 	getCardsData,
 	getUserData,
 	updateUserData,
@@ -15,7 +22,7 @@ import {
 	updateAvatarData,
 } from './components/api.js'
 
-const cardList = document.querySelector('.places__list')
+const cardsContainer = document.querySelector('.places__list')
 const buttonOpenEditProfilePopup = document.querySelector(
 	'.profile__edit-button'
 )
@@ -23,11 +30,16 @@ const buttonOpenAddCardPopup = document.querySelector('.profile__add-button')
 const buttonOpenEditAvatarPopup = document.querySelector(
 	'.profile__avatar-button'
 )
+const popups = document.querySelectorAll('.popup')
 const popupEdit = document.querySelector('.popup_type_edit')
 const popupAdd = document.querySelector('.popup_type_new-card')
 const popupAvatar = document.querySelector('.popup_type_avatar')
 const popupTypeImage = document.querySelector('.popup_type_image')
+const buttonSaveEditProfile = popupEdit.querySelector('.popup__button')
+const buttonSaveEditAvatar = popupAvatar.querySelector('.popup__button')
+const buttonSaveAddCard = popupAdd.querySelector('.popup__button')
 const popupImage = document.querySelector('.popup__image')
+const popupCaption = document.querySelector('.popup__caption')
 const formElementNewPlace = document.querySelector(
 	'.popup__form[name="new-place"]'
 )
@@ -45,72 +57,71 @@ const avatarLinkInput = document.querySelector('.popup__input_type_avatar_url')
 const profileTitle = document.querySelector('.profile__title')
 const profileDescription = document.querySelector('.profile__description')
 const avatar = document.querySelector('.profile__image')
-const profileImage = document.querySelector('.profile__image-box')
 
-Promise.all([getUserData(config), getCardsData(config)]).then(data => {
-	profileTitle.textContent = data[0].name
-	profileDescription.textContent = data[0].about
-	avatar.style.backgroundImage = `url(${data[0].avatar})`
-	const userId = data[0]._id
-	data[1].forEach(item => {
-		const isLikedByUser = item.likes.some(user => user._id === userId)
-		const cardData = createCard(
-			item.name,
-			item.link,
-			deleteCard,
-			likeCard,
-			item.likes.length,
-			isLikedByUser,
+Promise.all([getUserData(), getCardsData()]).then(([profile, cards]) => {
+	profileTitle.textContent = profile.name
+	profileDescription.textContent = profile.about
+	avatar.style.backgroundImage = `url(${profile.avatar})`
+	const userId = profile._id
+	cards.forEach(card => {
+		const cardElement = createCard(
+			card,
+			handleDeleteClick,
+			handleLikeClick,
 			openCardImage,
-			userId,
-			item.owner._id,
-			item._id
+			userId
 		)
-		addCard(cardData)
+		addCard(cardElement)
 	})
 })
 
-function addCard(item) {
-	cardList.append(item)
+function addCard(cardElement) {
+	cardsContainer.append(cardElement)
 }
 
-function openCardImage(event) {
-	const cardImage = event.target.closest('.card__image')
+function openCardImage(cardData) {
 	openPopup(popupTypeImage)
-	popupImage.src = cardImage.src
-	popupImage.alt = cardImage.alt
+	popupImage.src = cardData.link
+	popupImage.alt = cardData.name
+	popupCaption.textContent = cardData.name
 }
 
-buttonOpenEditProfilePopup.addEventListener('click', function () {
+function handleEditProfileClick() {
 	nameInput.value = profileTitle.textContent
 	jobInput.value = profileDescription.textContent
 	clearValidation(popupEdit, validationConfig)
 	openPopup(popupEdit)
-})
-buttonOpenAddCardPopup.addEventListener('click', function () {
-	placeNameInput.value = ''
-	linkInput.value = ''
-	clearValidation(popupAdd, validationConfig)
+}
+
+function handleAddCardClick() {
 	openPopup(popupAdd)
-})
-buttonOpenEditAvatarPopup.addEventListener('click', function () {
-	avatarLinkInput.value = ''
+}
+
+function handleEditAvatarClick() {
+	formElementAvatar.reset()
 	clearValidation(popupAvatar, validationConfig)
 	openPopup(popupAvatar)
-})
-formElementNewPlace.addEventListener('submit', submitAddCardForm)
-formElementProfile.addEventListener('submit', submitEditProfileForm)
-formElementAvatar.addEventListener('submit', submitEditAvatarForm)
+}
 
-function submitEditProfileForm(event) {
+document.addEventListener(
+	'DOMContentLoaded',
+	setCloseModalOnClickListeners(popups)
+)
+buttonOpenEditProfilePopup.addEventListener('click', handleEditProfileClick)
+buttonOpenAddCardPopup.addEventListener('click', handleAddCardClick)
+buttonOpenEditAvatarPopup.addEventListener('click', handleEditAvatarClick)
+formElementNewPlace.addEventListener('submit', handleAddCardFormSubmit)
+formElementProfile.addEventListener('submit', handleEditProfileFormSubmit)
+formElementAvatar.addEventListener('submit', handleEditAvatarFormSubmit)
+
+function handleEditProfileFormSubmit(event) {
 	event.preventDefault()
-	const buttonSave = popupEdit.querySelector('.popup__button')
-	buttonSave.textContent = 'Сохранение...'
+	buttonSaveEditProfile.textContent = 'Сохранение...'
 	const userData = {
 		name: nameInput.value,
 		about: jobInput.value,
 	}
-	updateUserData(config, userData)
+	updateUserData(userData)
 		.then(newUserData => {
 			profileTitle.textContent = newUserData.name
 			profileDescription.textContent = newUserData.about
@@ -120,18 +131,17 @@ function submitEditProfileForm(event) {
 			console.error('Ошибка при обновлении профиля:', error)
 		})
 		.finally(() => {
-			buttonSave.textContent = 'Сохранить'
+			buttonSaveEditProfile.textContent = 'Сохранить'
 		})
 }
 
-function submitEditAvatarForm(event) {
+function handleEditAvatarFormSubmit(event) {
 	event.preventDefault()
-	const buttonSave = popupAvatar.querySelector('.popup__button')
-	buttonSave.textContent = 'Сохранение...'
+	buttonSaveEditAvatar.textContent = 'Сохранение...'
 	const avatarData = {
 		avatar: avatarLinkInput.value,
 	}
-	updateAvatarData(config, avatarData)
+	updateAvatarData(avatarData)
 		.then(newAvatarData => {
 			console.log(newAvatarData)
 			avatar.style.backgroundImage = `url(${newAvatarData.avatar})`
@@ -141,56 +151,45 @@ function submitEditAvatarForm(event) {
 			console.error('Ошибка при обновлении аватара:', error)
 		})
 		.finally(() => {
-			buttonSave.textContent = 'Сохранить'
+			buttonSaveEditAvatar.textContent = 'Сохранить'
 		})
 }
 
-function submitAddCardForm(event) {
+function handleAddCardFormSubmit(event) {
 	event.preventDefault()
-	const buttonSave = popupAdd.querySelector('.popup__button')
-	buttonSave.textContent = 'Сохранение...'
-	const cardData = {
+	buttonSaveAddCard.textContent = 'Сохранение...'
+	const CardData = {
 		name: placeNameInput.value,
 		link: linkInput.value,
 	}
-	sendNewCardData(config, cardData)
+	sendNewCardData(CardData)
 		.then(newCard => {
-			formElementNewPlace.reset()
-			clearValidation(formElementNewPlace, validationConfig)
 			closePopup(popupAdd)
 			const userId = newCard.owner._id
-			const isLikedByUser = newCard.likes.some(user => user._id === userId)
+			const newCardData = {
+				_id: newCard._id,
+				name: newCard.name,
+				link: newCard.link,
+				likes: newCard.likes,
+				owner: newCard.owner,
+			}
 			const cardData = createCard(
-				newCard.name,
-				newCard.link,
-				deleteCard,
-				likeCard,
-				newCard.likes.length,
-				isLikedByUser,
+				newCardData,
+				handleDeleteClick,
+				handleLikeClick,
 				openCardImage,
-				userId,
-				newCard.owner._id,
-				newCard._id
+				userId
 			)
-			console.log(cardData)
-			cardList.prepend(cardData)
+			cardsContainer.prepend(cardData)
+			formElementNewPlace.reset()
+			clearValidation(popupAdd, validationConfig)
 		})
 		.catch(error => {
 			console.error('Ошибка при добавлении карточки:', error)
 		})
 		.finally(() => {
-			buttonSave.textContent = 'Сохранить'
+			buttonSaveAddCard.textContent = 'Сохранить'
 		})
 }
-
-profileImage.addEventListener('mouseover', function () {
-	buttonOpenEditAvatarPopup.style.display = 'block'
-	avatar.style.opacity = '0.2'
-})
-
-profileImage.addEventListener('mouseout', function () {
-	buttonOpenEditAvatarPopup.style.display = 'none'
-	avatar.style.opacity = '1'
-})
 
 enableValidation(validationConfig)

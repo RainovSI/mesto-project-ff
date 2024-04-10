@@ -1,19 +1,14 @@
-export { createCard, deleteCard, likeCard }
-import { config, checkRequest } from './api.js'
+export { createCard, handleDeleteClick, handleLikeClick }
+import { deleteCard, changeLikeStatus } from './api.js'
 
 const cardTemplate = document.querySelector('#card-template').content
 
 function createCard(
-	title,
-	image,
+	cardData,
 	deleteCallback,
 	likeCallback,
-	likeCounter,
-	isLikedByUser,
 	openImageCallback,
-	userId,
-	ownerId,
-	cardId
+	userId
 ) {
 	const cardElement = cardTemplate.querySelector('.card').cloneNode(true)
 	const likeButton = cardElement.querySelector('.card__like-button')
@@ -22,15 +17,18 @@ function createCard(
 	const cardLikeCounter = cardElement.querySelector(
 		'.card__like-button-counter'
 	)
+	const isLikedByUser = cardData.likes.some(like => like._id === userId)
 
-	cardElement.querySelector('.card__title').textContent = title
-	cardImage.alt = title
-	cardImage.src = image
-	cardLikeCounter.textContent = likeCounter
-	cardElement.setAttribute('data-card-id', cardId)
+	cardElement.querySelector('.card__title').textContent = cardData.name
+	cardImage.alt = cardData.name
+	cardImage.src = cardData.link
+	cardLikeCounter.textContent = cardData.likes.length
+	cardElement.setAttribute('data-card-id', cardData._id)
 
-	if (ownerId === userId) {
-		deleteButton.addEventListener('click', () => deleteCallback(cardId))
+	if (cardData.owner._id === userId) {
+		deleteButton.addEventListener('click', () =>
+			deleteCallback(cardData._id, cardElement)
+		)
 	} else {
 		deleteButton.style.display = 'none'
 	}
@@ -40,25 +38,16 @@ function createCard(
 	}
 
 	likeButton.addEventListener('click', () => {
-		likeCallback(cardId).then(data => {
-			likeButton.classList.toggle('card__like-button_is-active')
-			cardLikeCounter.textContent = data.likes.length
-		})
+		likeCallback(cardData._id, likeButton, cardLikeCounter)
 	})
-
-	cardImage.addEventListener('click', openImageCallback)
+	cardImage.addEventListener('click', () => openImageCallback(cardData))
 
 	return cardElement
 }
 
-function deleteCard(cardId) {
-	return fetch(`${config.baseUrl}/cards/${cardId}`, {
-		method: 'DELETE',
-		headers: config.headers,
-	})
-		.then(res => checkRequest(res))
+function handleDeleteClick(cardId, cardElement) {
+	deleteCard(cardId)
 		.then(() => {
-			const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
 			cardElement.remove()
 		})
 		.catch(err => {
@@ -66,20 +55,14 @@ function deleteCard(cardId) {
 		})
 }
 
-function likeCard(cardId) {
-	const cardElement = document.querySelector(`[data-card-id="${cardId}"]`)
-	const cardItemButton = cardElement.querySelector('.card__like-button')
-	const isLiked = cardItemButton.classList.contains(
-		'card__like-button_is-active'
-	)
-
-	const method = isLiked ? 'DELETE' : 'PUT'
-	return fetch(`${config.baseUrl}/cards/likes/${cardId}`, {
-		method: method,
-		headers: config.headers,
-	})
-		.then(res => checkRequest(res))
+function handleLikeClick(cardId, likeButton, likeCounter) {
+	const isLiked = likeButton.classList.contains('card__like-button_is-active')
+	changeLikeStatus(cardId, isLiked)
 		.then(data => {
-			return data
+			likeButton.classList.toggle('card__like-button_is-active')
+			likeCounter.textContent = data.likes.length
+		})
+		.catch(err => {
+			console.error('Ошибка при изменении статуса лайка:', err)
 		})
 }

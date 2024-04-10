@@ -4,8 +4,10 @@ export {
 	getCardsData,
 	updateUserData,
 	sendNewCardData,
-	checkRequest,
+	checkResponse,
 	updateAvatarData,
+	changeLikeStatus,
+	deleteCard,
 }
 
 const config = {
@@ -16,7 +18,7 @@ const config = {
 	},
 }
 
-function checkRequest(res) {
+function checkResponse(res) {
 	if (res.ok) {
 		return res.json()
 	}
@@ -25,38 +27,53 @@ function checkRequest(res) {
 	})
 }
 
-function getUserData(config) {
+function getUserData() {
 	return fetch(`${config.baseUrl}/users/me`, {
 		headers: config.headers,
-	}).then(res => checkRequest(res))
+	}).then(res => checkResponse(res))
 }
 
-function getCardsData(config) {
+function getCardsData() {
 	return fetch(`${config.baseUrl}/cards`, {
 		headers: config.headers,
-	}).then(res => checkRequest(res))
+	}).then(res => checkResponse(res))
 }
 
-function updateUserData(config, userData) {
+function updateUserData(userData) {
 	return fetch(`${config.baseUrl}/users/me`, {
 		method: 'PATCH',
 		headers: config.headers,
 		body: JSON.stringify(userData),
-	}).then(res => checkRequest(res))
+	}).then(res => checkResponse(res))
 }
 
-function updateAvatarData(config, avatarData) {
+function updateAvatarData(avatarData) {
 	return fetch(`${config.baseUrl}/users/me/avatar`, {
 		method: 'PATCH',
 		headers: config.headers,
 		body: JSON.stringify(avatarData),
-	}).then(res => checkRequest(res))
+	}).then(res => checkResponse(res))
 }
 
-function sendNewCardData(config, cardData) {
+function sendNewCardData(cardData) {
 	return fetch(`${config.baseUrl}/cards`, {
 		method: 'POST',
 		headers: config.headers,
 		body: JSON.stringify(cardData),
-	}).then(res => checkRequest(res))
+	}).then(res => checkResponse(res))
+}
+
+function changeLikeStatus(cardId, like) {
+	const method = like ? 'DELETE' : 'PUT'
+	return fetch(`${config.baseUrl}/cards/likes/${cardId}`, {
+		method: method,
+		headers: config.headers,
+	}).then(res => checkResponse(res))
+}
+
+function deleteCard(cardId) {
+	return fetch(`${config.baseUrl}/cards/${cardId}`, {
+		method: 'DELETE',
+		headers: config.headers,
+	}).then(res => checkResponse(res))
 }
